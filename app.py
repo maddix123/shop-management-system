@@ -37,6 +37,11 @@ def init_db() -> None:
             )
             """
         )
+        existing_shop = connection.execute(
+            "SELECT id FROM shops ORDER BY id LIMIT 1"
+        ).fetchone()
+        if existing_shop is None:
+            connection.execute("INSERT INTO shops (name) VALUES (?)", ("Default Shop",))
         connection.execute(
             """
             CREATE TABLE IF NOT EXISTS users (
@@ -59,6 +64,14 @@ def init_db() -> None:
             )
             """
         )
+        item_columns = {
+            row["name"]
+            for row in connection.execute("PRAGMA table_info(items)").fetchall()
+        }
+        if "shop_id" not in item_columns:
+            connection.execute(
+                "ALTER TABLE items ADD COLUMN shop_id INTEGER NOT NULL DEFAULT 1"
+            )
         connection.execute(
             """
             CREATE TABLE IF NOT EXISTS sales (

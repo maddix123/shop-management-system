@@ -28,3 +28,14 @@ source venv/bin/activate
 pip install -r requirements.txt
 python app.py
 ```
+
+## Update without reinstalling
+
+Run on the VPS:
+
+```bash
+cd /opt/shop-management-system
+git pull --ff-only
+./venv/bin/pip install -r requirements.txt
+sudo systemctl restart shop-management.service
+```
