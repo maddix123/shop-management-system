@@ -3,6 +3,11 @@
 {% block content %}
   <section class="panel">
     <h2>Inventory Overview</h2>
+    {% if update_status %}
+      <div class="status {{ 'status-ok' if update_ok == 'true' else 'status-error' }}">
+        {{ update_status }}
+      </div>
+    {% endif %}
     {% if items %}
       <table>
         <thead>

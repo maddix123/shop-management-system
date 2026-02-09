@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import os
 import sqlite3
+import subprocess
+import sys
 from dataclasses import dataclass
 
 from flask import Flask, redirect, render_template, request, url_for
@@ -92,7 +94,35 @@ init_db()
 
 @app.route("/")
 def index() -> str:
-    return render_template("index.html", items=fetch_items())
+    status = request.args.get("update_status")
+    update_ok = request.args.get("update_ok")
+    return render_template(
+        "index.html",
+        items=fetch_items(),
+        update_status=status,
+        update_ok=update_ok,
+    )
+
+
+def run_updates() -> tuple[bool, str]:
+    repo_dir = os.path.dirname(os.path.abspath(__file__))
+    git_result = subprocess.run(
+        ["git", "-C", repo_dir, "pull", "--ff-only"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if git_result.returncode != 0:
+        return False, "Git pull failed. Check server logs."
+    pip_result = subprocess.run(
+        [sys.executable, "-m", "pip", "install", "-r", os.path.join(repo_dir, "requirements.txt")],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if pip_result.returncode != 0:
+        return False, "Dependency install failed. Check server logs."
+    return True, "Update completed successfully."
 
 
 @app.route("/item/new", methods=["GET", "POST"])
@@ -124,6 +154,12 @@ def edit_item(item_id: int) -> str:
 def remove_item(item_id: int) -> str:
     delete_item(item_id)
     return redirect(url_for("index"))
+
+
+@app.post("/update")
+def update_app() -> str:
+    success, message = run_updates()
+    return redirect(url_for("index", update_status=message, update_ok=str(success).lower()))
 
 
 if __name__ == "__main__":
