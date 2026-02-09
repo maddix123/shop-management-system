@@ -13,11 +13,23 @@ fi
 
 CURRENT_USER="${SUDO_USER:-$(id -un)}"
 
-read -r -p "GitHub repo URL [${DEFAULT_REPO_URL}]: " REPO_URL
-REPO_URL="${REPO_URL:-$DEFAULT_REPO_URL}"
+prompt_value() {
+  local prompt="$1"
+  local default_value="$2"
+  local result=""
 
-read -r -p "Port for web UI [8000]: " APP_PORT
-APP_PORT="${APP_PORT:-8000}"
+  if [[ -t 0 ]]; then
+    read -r -p "$prompt" result || true
+  elif [[ -r /dev/tty ]]; then
+    read -r -p "$prompt" result </dev/tty || true
+  fi
+
+  echo "${result:-$default_value}"
+}
+
+REPO_URL="$(prompt_value "GitHub repo URL [${DEFAULT_REPO_URL}]: " "$DEFAULT_REPO_URL")"
+
+APP_PORT="$(prompt_value "Port for web UI [8000]: " "8000")"
 
 $SUDO apt-get update
 $SUDO apt-get install -y git python3 python3-venv
