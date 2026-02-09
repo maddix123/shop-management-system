@@ -8,6 +8,11 @@
         {{ update_status }}
       </div>
     {% endif %}
+    {% if sell_status %}
+      <div class="status {{ 'status-ok' if sell_ok == 'true' else 'status-error' }}">
+        {{ sell_status }}
+      </div>
+    {% endif %}
     {% if items %}
       <table>
         <thead>

@@ -96,11 +96,15 @@ init_db()
 def index() -> str:
     status = request.args.get("update_status")
     update_ok = request.args.get("update_ok")
+    sell_status = request.args.get("sell_status")
+    sell_ok = request.args.get("sell_ok")
     return render_template(
         "index.html",
         items=fetch_items(),
         update_status=status,
         update_ok=update_ok,
+        sell_status=sell_status,
+        sell_ok=sell_ok,
     )
 
 
@@ -160,6 +164,57 @@ def remove_item(item_id: int) -> str:
 def update_app() -> str:
     success, message = run_updates()
     return redirect(url_for("index", update_status=message, update_ok=str(success).lower()))
+
+
+@app.route("/sell", methods=["GET", "POST"])
+def sell_item() -> str:
+    items = fetch_items()
+    if request.method == "POST":
+        try:
+            item_id = int(request.form["item_id"])
+            quantity = int(request.form["quantity"])
+        except (TypeError, ValueError):
+            return redirect(
+                url_for(
+                    "index",
+                    sell_status="Please select a valid item and quantity.",
+                    sell_ok="false",
+                )
+            )
+        item = fetch_item(item_id)
+        if item is None:
+            return redirect(
+                url_for(
+                    "index",
+                    sell_status="Selected item not found.",
+                    sell_ok="false",
+                )
+            )
+        if quantity <= 0:
+            return redirect(
+                url_for(
+                    "index",
+                    sell_status="Quantity must be at least 1.",
+                    sell_ok="false",
+                )
+            )
+        if quantity > item.quantity:
+            return redirect(
+                url_for(
+                    "index",
+                    sell_status="Not enough stock to complete the sale.",
+                    sell_ok="false",
+                )
+            )
+        update_item(item.id, item.name, item.price, item.quantity - quantity)
+        return redirect(
+            url_for(
+                "index",
+                sell_status="Sale recorded successfully.",
+                sell_ok="true",
+            )
+        )
+    return render_template("sell_form.html", items=items)
 
 
 if __name__ == "__main__":
