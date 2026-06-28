@@ -135,9 +135,16 @@ async function loadCategories(selectId, filterId = null) {
   }
 }
 
-async function addCustomCategoryPrompt() {
-  const name = prompt('Enter the name of your new custom category:');
-  if (!name || name.trim() === '') return;
+function addCustomCategoryPrompt() {
+  // Completely replaced native prompt() with a custom-designed dark theme popup modal!
+  document.getElementById('category-form').reset();
+  document.getElementById('category-modal').classList.add('active');
+}
+
+async function submitCustomCategory(e) {
+  e.preventDefault();
+  const name = document.getElementById('new-category-name').value.trim();
+  if (!name || name === '') return;
 
   try {
     const res = await fetch(`${API_URL}/api/products/categories`, {
@@ -146,18 +153,19 @@ async function addCustomCategoryPrompt() {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
-      body: JSON.stringify({ name: name.trim() })
+      body: JSON.stringify({ name: name })
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Failed to create category');
 
-    showToast('success', 'Category Created', `"${name.trim()}" is now available!`);
+    showToast('success', 'Category Created', `"${name}" is now available!`);
+    closeModal('category-modal');
     
     // Reload lists and select the newly created category
     await loadCategories('prod-category', 'inventory-category-filter');
     
     const select = document.getElementById('prod-category');
-    if (select) select.value = name.trim();
+    if (select) select.value = name;
     
     filterInventory();
   } catch (err) {
