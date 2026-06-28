@@ -12,19 +12,26 @@ document.addEventListener('DOMContentLoaded', () => {
   const path = window.location.pathname;
   const isAuthPage = path === '/' || path === '/index.html' || path === '/index';
 
+  // 1. Instant POS/Dashboard Redirect if already logged in on login screen
+  if (token && isAuthPage) {
+    if (user && (user.role === 'admin' || user.role === 'manager')) {
+      window.location.href = '/dashboard';
+      return;
+    } else {
+      // Cashiers stay on POS
+      const authScreen = document.getElementById('auth-screen');
+      if (authScreen) authScreen.style.display = 'none';
+      const posScreen = document.getElementById('pos-screen');
+      if (posScreen) posScreen.style.display = 'block';
+    }
+  }
+
   if (!token && !isAuthPage) {
     window.location.href = '/';
     return;
   }
 
   if (token) {
-    // Hide auth page if logged in
-    const authScreen = document.getElementById('auth-screen');
-    if (authScreen) authScreen.style.display = 'none';
-    
-    const posScreen = document.getElementById('pos-screen');
-    if (posScreen) posScreen.style.display = 'block';
-
     // Populate user profile info
     if (user) {
       const usernameEl = document.getElementById('logged-username');
@@ -78,9 +85,15 @@ async function handleLogin(e) {
     localStorage.setItem('maddix_token', data.token);
     localStorage.setItem('maddix_user', JSON.stringify(data.user));
     
-    showToast('success', 'Terminal Authorized', 'Access granted. Opening terminal...');
+    showToast('success', 'Terminal Authorized', 'Access granted. Redirecting...');
+    
+    // Auto-routing based on role on success
     setTimeout(() => {
-      window.location.reload();
+      if (data.user.role === 'admin' || data.user.role === 'manager') {
+        window.location.href = '/dashboard';
+      } else {
+        window.location.href = '/';
+      }
     }, 1000);
   } catch (err) {
     showToast('error', 'Access Denied', err.message);
@@ -136,7 +149,6 @@ async function loadCategories(selectId, filterId = null) {
 }
 
 function addCustomCategoryPrompt() {
-  // Completely replaced native prompt() with a custom-designed dark theme popup modal!
   document.getElementById('category-form').reset();
   document.getElementById('category-modal').classList.add('active');
 }
@@ -161,7 +173,7 @@ async function submitCustomCategory(e) {
     showToast('success', 'Category Created', `"${name}" is now available!`);
     closeModal('category-modal');
     
-    // Reload lists and select the newly created category
+    // Reload categories dynamically and select the new one
     await loadCategories('prod-category', 'inventory-category-filter');
     
     const select = document.getElementById('prod-category');
@@ -709,7 +721,9 @@ async function saveProduct(e) {
 
     showToast('success', 'Stock Saved', 'Product file saved successfully!');
     closeModal('product-modal');
-    loadInventory();
+    
+    // Core Fix: Re-fetch all inventory and categories dynamically
+    await loadInventoryPage();
   } catch (err) {
     showToast('error', 'Error', err.message);
   }
