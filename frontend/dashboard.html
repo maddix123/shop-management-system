@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analytics Dashboard - Maddix Shop</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .dash-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+    @media (max-width: 900px) { .dash-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="container" style="max-width: 1300px;">
+    <nav class="navbar">
+      <h2>📊 Analytics & Operations Dashboard</h2>
+      <div class="nav-user">
+        <span class="coins-badge" style="background: var(--primary); color: white;">Analytics Hub</span>
+        <button class="btn btn-secondary btn-sm" onclick="window.location.href='/'">POS Terminal</button>
+        <button class="btn btn-secondary btn-sm" onclick="window.location.href='/inventory'">Inventory</button>
+        <button class="btn btn-secondary btn-sm" onclick="logout()">Logout</button>
+      </div>
+    </nav>
+
+    <!-- METRICS -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="icon">💰</div>
+        <h3>Today's Revenue</h3>
+        <div class="value" id="stat-revenue" style="color: var(--success);">0 UGX</div>
+      </div>
+      <div class="stat-card">
+        <div class="icon">📈</div>
+        <h3>Cumulative Profit</h3>
+        <div class="value" id="stat-profit" style="color: var(--warning);">0 UGX</div>
+      </div>
+      <div class="stat-card">
+        <div class="icon">📦</div>
+        <h3>Total Orders</h3>
+        <div class="value" id="stat-orders">0</div>
+      </div>
+      <div class="stat-card" style="border: 1px solid var(--danger);">
+        <div class="icon" style="color: var(--danger);">⚠️</div>
+        <h3>Low-Stock Warnings</h3>
+        <div class="value" id="stat-low-stock" style="color: var(--danger);">0</div>
+      </div>
+    </div>
+
+    <div class="dash-grid">
+      <!-- LEFT: Live Sales Logs -->
+      <div>
+        <div class="section">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2>Recent Transactions</h2>
+            <span class="status-badge status-connected" style="animation: pulse 2s infinite;">Live Active Sync</span>
+          </div>
+          <div class="bot-list" id="sales-history-list">
+            <div class="empty-state">Loading transactions logs...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Cashier Management -->
+      <div>
+        <div class="section" id="admin-user-section" style="display: none;">
+          <h2>Staff Account Manager</h2>
+          <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 16px;">Create and manage terminal cashier credentials</p>
+
+          <form id="create-user-form" onsubmit="createCashier(event)" style="background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 20px;">
+            <h4 style="margin-bottom: 12px; color: var(--primary);">Add New Staff</h4>
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label style="font-size: 12px;">Username</label>
+              <input type="text" id="staff-username" required placeholder="cashier1" style="padding: 6px 12px; font-size: 14px;">
+            </div>
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label style="font-size: 12px;">Email Address</label>
+              <input type="email" id="staff-email" required placeholder="staff@maddix.com" style="padding: 6px 12px; font-size: 14px;">
+            </div>
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label style="font-size: 12px;">Password</label>
+              <input type="password" id="staff-password" required placeholder="••••••••" style="padding: 6px 12px; font-size: 14px;">
+            </div>
+            <div class="form-group" style="margin-bottom: 12px;">
+              <label style="font-size: 12px;">Role Profile</label>
+              <select id="staff-role" style="width: 100%; padding: 8px 12px; background: var(--card); color: var(--text); border: 1px solid var(--border); border-radius: 6px; font-size: 14px;">
+                <option value="cashier" selected>Cashier</option>
+                <option value="manager">Manager</option>
+                <option value="admin">Administrator</option>
+              </select>
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm" style="width: 100%;">Create Account</button>
+          </form>
+
+          <h3>Active Staff Members</h3>
+          <div id="staff-list" class="bot-list" style="margin-top: 12px; max-height: 300px; overflow-y: auto;">
+            <!-- Cashier list -->
+          </div>
+        </div>
+
+        <div class="section" id="manager-notice-section">
+          <h2>Access Notice</h2>
+          <div class="empty-state" style="padding: 20px 0;">
+            <div class="icon">🔒</div>
+            <p>Only Administrators can create or configure cashiers / staff profiles.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container"></div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
