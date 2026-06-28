@@ -25,7 +25,7 @@ export async function seedDB() {
     if (!existingSettings) {
       await Settings.create({
         shopName: 'Maddix Shop',
-        taxRate: 18, // 18% VAT
+        taxRate: 0, // VAT Tax rate set to 0% by default
         currency: 'UGX',
         address: 'Shop 24, Boulevard Mall, Kampala',
         phone: '+256752972945'

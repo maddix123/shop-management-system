@@ -230,24 +230,20 @@ function renderCart() {
   calculateCart();
 }
 
+// VAT TAX CALCULATIONS REMOVED BY DEFAULT
 function calculateCart() {
   const subtotal = cart.reduce((sum, i) => sum + (i.sellingPrice * i.qty), 0);
-  
-  // 18% Standard Tax
-  const tax = Math.round(subtotal * 0.18);
   
   // Custom discount input
   let discount = parseInt(document.getElementById('summary-discount')?.value || 0);
   if (isNaN(discount)) discount = 0;
 
-  const total = Math.max(0, subtotal + tax - discount);
+  const total = Math.max(0, subtotal - discount);
 
   const subtotalEl = document.getElementById('summary-subtotal');
-  const taxEl = document.getElementById('summary-tax');
   const totalEl = document.getElementById('summary-total');
 
   if (subtotalEl) subtotalEl.textContent = `${subtotal.toLocaleString()} UGX`;
-  if (taxEl) taxEl.textContent = `${tax.toLocaleString()} UGX`;
   if (totalEl) totalEl.textContent = `${total.toLocaleString()} UGX`;
 
   calculateChange();
@@ -320,9 +316,6 @@ async function processCheckout() {
   const subtotalText = document.getElementById('summary-subtotal').textContent;
   const subtotal = parseInt(subtotalText.replace(/[^0-9]/g, ''));
   
-  const taxText = document.getElementById('summary-tax').textContent;
-  const tax = parseInt(taxText.replace(/[^0-9]/g, ''));
-  
   const discount = parseInt(document.getElementById('summary-discount').value || 0);
   
   const totalText = document.getElementById('summary-total').textContent;
@@ -339,7 +332,7 @@ async function processCheckout() {
   const payload = {
     items: cart.map(i => ({ productId: i.product, name: i.name, quantity: i.qty, sellingPrice: i.sellingPrice })),
     subtotal,
-    tax,
+    tax: 0, // VAT Tax set to 0
     discount,
     totalPrice: total,
     amountPaid: paid,
