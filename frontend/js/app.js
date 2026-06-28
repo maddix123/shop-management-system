@@ -4,6 +4,8 @@ const user = JSON.parse(localStorage.getItem('maddix_user') || 'null');
 let socket = null;
 let cart = [];
 let allProducts = [];
+let allInventory = [];
+let categoriesList = [];
 let selectedCustomer = null;
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -51,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (path.includes('dashboard')) {
       loadDashboard();
     } else if (path.includes('inventory')) {
-      loadInventory();
+      loadInventoryPage();
     } else {
       loadPOS();
     }
@@ -102,6 +104,64 @@ function setupSocket() {
         loadDashboard();
       }
     });
+  }
+}
+
+// ==================== CATEGORIES LOADING ====================
+async function loadCategories(selectId, filterId = null) {
+  try {
+    const res = await fetch(`${API_URL}/api/products/categories`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await res.json();
+    categoriesList = data.categories || [];
+    
+    // Populate form dropdown
+    const select = document.getElementById(selectId);
+    if (select) {
+      select.innerHTML = categoriesList.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+    }
+
+    // Populate filter dropdown if present
+    if (filterId) {
+      const filter = document.getElementById(filterId);
+      if (filter) {
+        filter.innerHTML = '<option value="all">All Categories</option>' + 
+          categoriesList.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+      }
+    }
+  } catch (err) {
+    console.error('Failed to load categories:', err);
+  }
+}
+
+async function addCustomCategoryPrompt() {
+  const name = prompt('Enter the name of your new custom category:');
+  if (!name || name.trim() === '') return;
+
+  try {
+    const res = await fetch(`${API_URL}/api/products/categories`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ name: name.trim() })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to create category');
+
+    showToast('success', 'Category Created', `"${name.trim()}" is now available!`);
+    
+    // Reload lists and select the newly created category
+    await loadCategories('prod-category', 'inventory-category-filter');
+    
+    const select = document.getElementById('prod-category');
+    if (select) select.value = name.trim();
+    
+    filterInventory();
+  } catch (err) {
+    showToast('error', 'Error', err.message);
   }
 }
 
@@ -504,7 +564,11 @@ async function createCashier(e) {
 }
 
 // ==================== INVENTORY STOCK MANAGEMENT ====================
-let allInventory = [];
+async function loadInventoryPage() {
+  await loadCategories('prod-category', 'inventory-category-filter');
+  await loadInventory();
+}
+
 async function loadInventory() {
   try {
     const res = await fetch(`${API_URL}/api/products`, {
@@ -529,7 +593,6 @@ function renderInventoryList(products) {
 
   container.innerHTML = products.map(p => {
     const isLowStock = p.stockQuantity <= p.lowStockThreshold;
-    const prodJson = encodeURIComponent(JSON.stringify(p));
 
     return `
       <div class="bot-item">
@@ -548,7 +611,7 @@ function renderInventoryList(products) {
             <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Min Alert: ${p.lowStockThreshold} units</div>
           </div>
           <div style="display: flex; gap: 6px;">
-            <button class="btn btn-secondary btn-sm" onclick="openEditProduct('${prodJson}')">Edit</button>
+            <button class="btn btn-secondary btn-sm" onclick="openEditProduct('${p._id}')">Edit</button>
             ${user && user.role === 'admin' ? `<button class="btn btn-danger btn-sm" onclick="deleteProduct('${p._id}')" style="background: var(--danger); padding: 6px 12px;">×</button>` : ''}
           </div>
         </div>
@@ -578,8 +641,9 @@ function openAddProductModal() {
   document.getElementById('product-modal').classList.add('active');
 }
 
-function openEditProduct(encodedProd) {
-  const p = JSON.parse(decodeURIComponent(encodedProd));
+function openEditProduct(productId) {
+  const p = allInventory.find(item => item._id === productId);
+  if (!p) return;
   
   document.getElementById('product-id').value = p._id;
   document.getElementById('prod-name').value = p.name;

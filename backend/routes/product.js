@@ -1,8 +1,49 @@
 import express from 'express';
 import Product from '../models/Product.js';
+import Category from '../models/Category.js';
 import { authenticate, requireRole } from '../middleware/auth.js';
 
 const router = express.Router();
+
+// ==================== CUSTOM CATEGORIES ROUTES ====================
+
+// Get all categories (and seed defaults if none exist)
+router.get('/categories', authenticate, async (req, res) => {
+  try {
+    let categories = await Category.find().sort({ name: 1 });
+    
+    if (categories.length === 0) {
+      const defaults = [
+        'Grocery', 'Beverages', 'Electronics', 'Apparel', 
+        'Cosmetics', 'Pharmaceuticals', 'Home & Office', 'Bakery', 'Other'
+      ];
+      await Category.create(defaults.map(name => ({ name })));
+      categories = await Category.find().sort({ name: 1 });
+    }
+    
+    res.json({ categories });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to retrieve categories' });
+  }
+});
+
+// Create custom category (Admin & Manager)
+router.post('/categories', authenticate, requireRole(['admin', 'manager']), async (req, res) => {
+  try {
+    const { name } = req.body;
+    if (!name || name.trim() === '') return res.status(400).json({ error: 'Category name is required' });
+
+    const existing = await Category.findOne({ name: name.trim() });
+    if (existing) return res.status(400).json({ error: 'Category already exists' });
+
+    const category = await Category.create({ name: name.trim() });
+    res.status(201).json({ message: 'Category created successfully', category });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to create category' });
+  }
+});
+
+// ==================== PRODUCT CRUD ROUTES ====================
 
 // Get all products
 router.get('/', authenticate, async (req, res) => {
