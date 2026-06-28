@@ -66,7 +66,7 @@
           <h2>Staff Account Manager</h2>
           <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 16px;">Create and manage terminal cashier credentials</p>
 
-          <form id="create-user-form" onsubmit="createCashier(event)" style="background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 20px;">
+          <form id="create-user-form" style="background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 20px;">
             <h4 style="margin-bottom: 12px; color: var(--primary);">Add New Staff</h4>
             <div class="form-group" style="margin-bottom: 10px;">
               <label style="font-size: 12px;">Username</label>
@@ -111,7 +111,7 @@
   <div class="toast-container"></div>
 
   <script src="/socket.io/socket.io.js"></script>
-  <!-- Cache Busting Query String Added Below -->
-  <script src="js/app.js?v=2.1"></script>
+  <!-- Absolute Cache Busting: Renamed Javascript Controller File to app-v2.js -->
+  <script src="js/app-v2.js"></script>
 </body>
 </html>

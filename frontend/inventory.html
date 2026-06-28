@@ -50,7 +50,7 @@
       <h2 id="product-modal-title">Add New Product</h2>
       <p style="color: var(--text-muted); margin-bottom: 20px;">Set SKU barcode and prices</p>
       
-      <form id="product-form" onsubmit="saveProduct(event)">
+      <form id="product-form">
         <input type="hidden" id="product-id">
         <div class="form-group">
           <label>Product Name</label>
@@ -107,7 +107,7 @@
       <h2>Add Custom Category</h2>
       <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px;">Create a completely customized department on-the-fly</p>
       
-      <form id="category-form" onsubmit="submitCustomCategory(event)">
+      <form id="category-form">
         <div class="form-group">
           <label>Category Name</label>
           <input type="text" id="new-category-name" required placeholder="e.g. Cosmetics, Grains, Bakery">
@@ -122,7 +122,7 @@
 
   <div class="toast-container"></div>
 
-  <!-- Cache Busting Query String Added Below -->
-  <script src="js/app.js?v=2.1"></script>
+  <!-- Absolute Cache Busting: Renamed Javascript Controller File to app-v2.js -->
+  <script src="js/app-v2.js"></script>
 </body>
 </html>
