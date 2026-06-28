@@ -8,7 +8,10 @@ const router = express.Router();
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
-    const user = await User.findOne({ email });
+    if (!email || !password) return res.status(400).json({ error: 'Email and password are required' });
+
+    // Robust case-insensitive check
+    const user = await User.findOne({ email: email.trim().toLowerCase() });
     if (!user || !user.isActive) return res.status(401).json({ error: 'Invalid credentials or inactive account' });
 
     const isMatch = await user.comparePassword(password);
@@ -30,6 +33,7 @@ router.post('/login', async (req, res) => {
       }
     });
   } catch (err) {
+    console.error('Login route error:', err);
     res.status(500).json({ error: 'Login failed' });
   }
 });
