@@ -54,6 +54,22 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
+    // Add Form Submit Listeners strictly via Javascript to block all default browser reloads!
+    const productForm = document.getElementById('product-form');
+    if (productForm) {
+      productForm.addEventListener('submit', saveProduct);
+    }
+
+    const categoryForm = document.getElementById('category-form');
+    if (categoryForm) {
+      categoryForm.addEventListener('submit', submitCustomCategory);
+    }
+
+    const createUserForm = document.getElementById('create-user-form');
+    if (createUserForm) {
+      createUserForm.addEventListener('submit', createCashier);
+    }
+
     setupSocket();
 
     // Trigger page-specific logic
@@ -63,6 +79,12 @@ document.addEventListener('DOMContentLoaded', () => {
       loadInventoryPage();
     } else {
       loadPOS();
+    }
+  } else {
+    // Auth page handlers
+    const loginForm = document.getElementById('login-form');
+    if (loginForm) {
+      loginForm.addEventListener('submit', handleLogin);
     }
   }
 });
@@ -87,7 +109,7 @@ async function handleLogin(e) {
     
     showToast('success', 'Terminal Authorized', 'Access granted. Redirecting...');
     
-    // Auto-routing based on role on success
+    // Auto-routing based on role on success (instantly navigates!)
     setTimeout(() => {
       if (data.user.role === 'admin' || data.user.role === 'manager') {
         window.location.href = '/dashboard';
@@ -173,7 +195,7 @@ async function submitCustomCategory(e) {
     showToast('success', 'Category Created', `"${name}" is now available!`);
     closeModal('category-modal');
     
-    // Reload categories dynamically and select the new one
+    // Reload categories dynamically and select the new one (refresh-free update!)
     await loadCategories('prod-category', 'inventory-category-filter');
     
     const select = document.getElementById('prod-category');
